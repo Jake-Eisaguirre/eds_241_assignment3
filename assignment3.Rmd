@@ -1,0 +1,71 @@
+---
+title: "assignment3"
+author: "Jake Eisaguirre"
+date: "2/12/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+library(janitor)
+library(tidyverse)
+library(kableExtra)
+library(estimatr)
+```
+
+
+### Clean Data
+
+\noindent The following code loads and cleans the data.
+```{r}
+data <- read.csv("SMOKING_EDS241.csv") %>% 
+  clean_names()
+```
+
+### (a) What is the unadjusted mean difference in birth weight of infants with smoking and nonsmoking mothers? Under what hypothesis does this correspond to the average treatment effect of maternal smoking during pregnancy on infant birth weight? Provide some simple empirical evidence for or against this hypothesis.
+
+\noindent The following code calculates the undjusted mean difference 
+```{r}
+avg_birth_smoke <- data %>% 
+  filter(tobacco >= 1) %>% 
+  summarize(mean_birth_smoker = mean(birthwgt))
+
+kable(avg_birth_smoke)
+
+avg_birth_nonsmoke <- data %>% 
+  filter(tobacco <= 0) %>% 
+  summarize(mean_birth_nonsmoker = mean(birthwgt))
+
+kable(avg_birth_nonsmoke)
+
+```
+
+\noindent Answer.....
+
+### (b) Assume that maternal smoking is randomly assigned conditional on the observable covariates listed above. Estimate the effect of maternal smoking on birth weight using a linear regression. Report the estimated coefficient on tobacco and its standard error.
+
+\noindent The following code estimates the effect of maternal smoking on birth weight conditional on the observable
+covariates listed above
+```{r}
+mod1 <- lm_robust(birthwgt ~ tobacco + anemia + diabete + alcohol + meduc + first + mage + mblack, data)
+
+tidy(mod1) %>% 
+  kable()
+
+```
+
+\noindent Answer.....
+
+### (c) Use the exact matching estimator to estimate the effect of maternal smoking on birth weight. 
+
+\noindent The following codes estimates the effect of maternal smoking on birth weight
+```{r}
+
+match_est <- data %>% 
+  mutate(mage = ifelse(mage >= 34, c(0), c(1)),
+         meduc = ifelse(meduc >= 16, c(0), c(1))) %>% 
+  select(meduc, mage, alcohol, mblack, tobacco, birthwgt)
+
+```
+

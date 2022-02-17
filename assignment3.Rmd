@@ -23,7 +23,7 @@ data <- read.csv("SMOKING_EDS241.csv") %>%
   clean_names()
 ```
 
-### (a) What is the unadjusted mean difference in birth weight of infants with smoking and nonsmoking mothers? Under what hypothesis does this correspond to the average treatment effect of maternal smoking during pregnancy on infant birth weight? Provide some simple empirical evidence for or against this hypothesis.
+### (a) What is the unadjusted mean difference in birth weight of infants with smoking and nonsmoking mothers? Under what assumption does this correspond to the average treatment effect of maternal smoking during pregnancy on infant birth weight? Provide some simple empirical evidence for or against this assumption.
 
 \noindent The following code calculates the undjusted mean difference 
 ```{r}

@@ -63,7 +63,7 @@ tidy(mod1) %>%
 
 ```
 
-\noindent The estimated coefficient on tobacco is a decrease of 228.07 grams in baby birth weight for parents who smoke and the standard error is -236.45g and -219.69g 
+\noindent The estimated coefficient on tobacco tells us on average there will be a decrease of 228.07 grams in baby birth weight for parents who smoke when all else is held constant, and the standard error is -236.45g and -219.69g 
 
 ### (c) Report the estimated average treatment effect of smoking on birthweight using the exact matching estimator and its linear regression analogue. 
 
@@ -80,19 +80,62 @@ mod2 <- lm_robust(birthwgt ~ tobacco + factor(g), data = match_est)
 
 tidy(mod2) %>% 
   kable()
+
+
+
+TIA_table <- match_est %>%
+  group_by(tobacco, g)%>% 
+  summarise(n_obs = n(),
+            Y_mean= mean(birthwgt, na.rm = T))%>% #Calculate number of observations and Y mean by X by treatment cells
+  gather(variables, values, n_obs:Y_mean)%>% #Reshape data
+  mutate(variables = paste0(variables,"_",tobacco, sep=""))%>% #Combine the treatment and variables for reshaping
+  pivot_wider(id_cols = g, names_from = variables,values_from = values)%>% #Reshape data by treatment and X cell
+  ungroup()%>%  #Ungroup from X values
+  mutate(Y_diff = Y_mean_1 - Y_mean_0, #calculate Y_diff
+         w_ATE = (n_obs_0+n_obs_1)/(sum(n_obs_0)+sum(n_obs_1)),
+         w_ATT = n_obs_1/sum(n_obs_1))%>% #calculate weights
+  mutate_if(is.numeric, round, 2) #Round data
+
+
+kable(TIA_table)
+
+# MULTIVARIATE MATCHING ESTIMATES OF ATE AND ATT
+ATE=sum((TIA_table$w_ATE)*(TIA_table$Y_diff))
+ATE
+ATT=sum((TIA_table$w_ATT)*(TIA_table$Y_diff))
+ATT
 ```
+
+
+
+
 
 ### (d) Estimate the propensity score for maternal smoking using a logit estimator and based on the following specification: mother’s age, mother’s age squared, mother’s education, and indicators for mother’s race, and alcohol consumption. 
 
 \noindent The following code estimates the propensity score 
 ```{r}
+d_data <- data %>% 
+  mutate(mother_square = mage ^2)
+
+mod3 <- glm(tobacco ~ mage + mother_square + meduc + alcohol + mblack, family = binomial(), d_data)
+
+tidy(mod2) %>% 
+  kable()
+
+EPS <- predict(mod3, type = "response")
+PS_WGT <- (d_data$tobacco/EPS) + ((1-d_data$tobacco)/(1-EPS))
+
 
 ```
 
 ### (e) Use the propensity score weighted regression (WLS) to estimate the effect of maternal smoking on birth weight
 
-\noindent The following code estimates 
+\noindent The following code uses the propensity score weighted regression to estimate the effectr of maternal smoking on birth weight
 ```{r}
+wls1 <- lm(formula = birthwgt ~ tobacco + mage + mother_square + meduc + alcohol + mblack, 
+           data=d_data, weights=PS_WGT)
 
+tidy(wls1) %>% 
+  kable()
 ```
 

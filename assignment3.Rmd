@@ -31,17 +31,24 @@ avg_birth_smoke <- data %>%
   filter(tobacco >= 1) %>% 
   summarize(mean_birth_smoker = mean(birthwgt))
 
-kable(avg_birth_smoke)
+
 
 avg_birth_nonsmoke <- data %>% 
   filter(tobacco <= 0) %>% 
   summarize(mean_birth_nonsmoker = mean(birthwgt))
 
-kable(avg_birth_nonsmoke)
+unadjusted_mean <- avg_birth_smoke - avg_birth_nonsmoke
+
+kable(unadjusted_mean)
+
+empirical_evidence <- lm(birthwgt ~ alcohol, data = data)
+
+tidy(empirical_evidence) %>% 
+  kable()
 
 ```
 
-\noindent Answer.....
+\noindent The assumption is, if smoking was randomly assigned among mothers, then we wouldn't expect to see a difference between other covariates. Based on the un-adjusted mean differences of birthwgt ~ alcohol we can see there is other variables with non mean differences.
 
 ### (b) Assume that maternal smoking is randomly assigned conditional on the observable covariates listed above. Estimate the effect of maternal smoking on birth weight using a linear regression. Report the estimated coefficient on tobacco and its standard error.
 
@@ -53,11 +60,12 @@ mod1 <- lm_robust(birthwgt ~ tobacco + anemia + diabete + alcohol + meduc + firs
 tidy(mod1) %>% 
   kable()
 
+
 ```
 
-\noindent Answer.....
+\noindent The estimated coefficient on tobacco is a decrease of 228.07 grams in baby birth weight for parents who smoke and the standard error is -236.45g and -219.69g 
 
-### (c) Use the exact matching estimator to estimate the effect of maternal smoking on birth weight. 
+### (c) Report the estimated average treatment effect of smoking on birthweight using the exact matching estimator and its linear regression analogue. 
 
 \noindent The following codes estimates the effect of maternal smoking on birth weight
 ```{r}
@@ -65,7 +73,26 @@ tidy(mod1) %>%
 match_est <- data %>% 
   mutate(mage = ifelse(mage >= 34, c(0), c(1)),
          meduc = ifelse(meduc >= 16, c(0), c(1))) %>% 
-  select(meduc, mage, alcohol, mblack, tobacco, birthwgt)
+  select(meduc, mage, alcohol, mblack, tobacco, birthwgt) %>% 
+  mutate(g = paste0(meduc, mage, alcohol, mblack))
+
+mod2 <- lm_robust(birthwgt ~ tobacco + factor(g), data = match_est)
+
+tidy(mod2) %>% 
+  kable()
+```
+
+### (d) Estimate the propensity score for maternal smoking using a logit estimator and based on the following specification: mother’s age, mother’s age squared, mother’s education, and indicators for mother’s race, and alcohol consumption. 
+
+\noindent The following code estimates the propensity score 
+```{r}
+
+```
+
+### (e) Use the propensity score weighted regression (WLS) to estimate the effect of maternal smoking on birth weight
+
+\noindent The following code estimates 
+```{r}
 
 ```
 
